@@ -1,5 +1,7 @@
 import os, sys
 import mlflow
+import dagshub
+import joblib
 from networksecurity.exception.exception import NetworkSecurityException
 from networksecurity.logger.logging import logging
 
@@ -15,6 +17,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
+
+dagshub.init(repo_owner='AnubhavYadavBCA25', repo_name='Network-Security-Project', mlflow=True)
 
 class ModelTrainer:
     def __init__(self, model_trainer_config: ModelTrainerConfig, data_transformation_artifact: DataTransformationArtifact):
@@ -33,7 +37,9 @@ class ModelTrainer:
             mlflow.log_metric("f1_score", f1_score)
             mlflow.log_metric("precision", precision_score)
             mlflow.log_metric("recall_score", recall_score)
-            mlflow.sklearn.log_model(best_model, "model")
+            # mlflow.sklearn.log_model(best_model, "model")
+            joblib.dump(best_model, "model.pkl")
+            mlflow.log_artifact("model.pkl")
         
     def train_model(self, X_train, y_train, X_test, y_test):
         models = {
@@ -102,6 +108,8 @@ class ModelTrainer:
         save_object(
             file_path=self.model_trainer_config.trained_model_file_path, obj=Network_Model
         )
+
+        save_object("final_model/model.pkl", best_model)
 
         ## Model Trainer Artifact
         model_trainer_artifact = ModelTrainerArtifact(trained_model_file_path=self.model_trainer_config.trained_model_file_path,
